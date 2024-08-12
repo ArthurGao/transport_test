@@ -1,10 +1,9 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactSlider from 'react-slider';
 import * as d3 from 'd3';
 import './DataRangeSlider.css';
 
-
-const DataRangeSlider = ({data}) => {
+const DataRangeSlider = ({ data }) => {
     const [rangeValue, setRangeValue] = useState([0, 8]);
     const [selectedOption, setSelectedOption] = useState('value');
     const [output, setOutput] = useState(null);
@@ -18,25 +17,31 @@ const DataRangeSlider = ({data}) => {
         const startIndex = rangeValue[0];
         const endIndex = selectedOption === 'value' ? startIndex : rangeValue[1];
 
-        let result;
+        let speedResult;
+        let losResult;
         switch (selectedOption) {
             case 'value':
-                result = data.speed[startIndex];
+                speedResult = data.speed[startIndex];
+                losResult = data.los_band[startIndex];
                 break;
             case 'mean':
-                result = d3.mean(data.speed.slice(startIndex, endIndex + 1));
+                speedResult = d3.mean(data.speed.slice(startIndex, endIndex + 1));
+                losResult = d3.mean(data.los_band.slice(startIndex, endIndex + 1));
                 break;
             case 'maximum':
-                result = d3.max(data.speed.slice(startIndex, endIndex + 1));
+                speedResult = d3.max(data.speed.slice(startIndex, endIndex + 1));
+                losResult = d3.max(data.los_band.slice(startIndex, endIndex + 1));
                 break;
             case 'minimum':
-                result = d3.min(data.speed.slice(startIndex, endIndex + 1));
+                speedResult = d3.min(data.speed.slice(startIndex, endIndex + 1));
+                losResult = d3.min(data.los_band.slice(startIndex, endIndex + 1));
                 break;
             default:
-                result = data.speed[startIndex];
+                speedResult = data.speed[startIndex];
+                losResult = data.los_band[startIndex];
                 break;
         }
-        setOutput(result);
+        setOutput({ "speed": speedResult, "los": losResult });
     };
 
     useEffect(() => {
@@ -60,6 +65,10 @@ const DataRangeSlider = ({data}) => {
         return date.toLocaleString();
     };
 
+    const toTime = (timestamp) => {
+        return new Date(timestamp).toLocaleString();
+    };
+
     useEffect(() => {
         let interval;
         if (isPlaying) {
@@ -81,19 +90,27 @@ const DataRangeSlider = ({data}) => {
     }, [isPlaying]);
 
     return (
-        <div>
-            <h3>Data Range Slider</h3>
-            <select value={selectedOption} onChange={e => setSelectedOption(e.target.value)}>
-                <option value="value">Value</option>
-                <option value="mean">Mean</option>
-                <option value="maximum">Maximum</option>
-                <option value="minimum">Minimum</option>
-            </select>
+        <div className="slider-wrapper">
+            <h3 className="slider-title">Data Range Slider</h3>
+            <div className="slider-controls">
+                <select
+                    className="slider-select"
+                    value={selectedOption}
+                    onChange={e => setSelectedOption(e.target.value)}
+                >
+                    <option value="value">Value</option>
+                    <option value="mean">Mean</option>
+                    <option value="maximum">Maximum</option>
+                    <option value="minimum">Minimum</option>
+                </select>
+                <button className="slider-button" onClick={handlePlayPause}>
+                    {isPlaying ? 'Pause' : 'Play'}
+                </button>
+            </div>
             <div className="slider-container">
                 <div className="slider-labels">
-                    <span className="slider-label">{formatDate(minDatetime)}</span>
-                    -
-                    <span className="slider-label">{formatDate(maxDatetime)}</span>
+                    <span
+                        className="slider-date-range">Date Range: {formatDate(minDatetime)} - {formatDate(maxDatetime)}</span>
                 </div>
                 <ReactSlider
                     className="horizontal-slider"
@@ -103,19 +120,23 @@ const DataRangeSlider = ({data}) => {
                     min={0}
                     max={data.datetime.length - 1}
                     onChange={value => setRangeValue(selectedOption === 'value' ? [value] : value)}
-                    renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+                    renderThumb={(props) => <div {...props}></div>}
                     pearling
                     minDistance={selectedOption === 'value' ? 0 : 1}
                     step={1}
                     ariaLabel={['Lower thumb', 'Upper thumb']}
                     ariaValuetext={state => `Thumb value ${state.valueNow}`}
                 />
+                <div className="slider-selector-values">
+                    <span>{toTime(datetime[rangeValue[0]])}</span>
+                    {selectedOption !== 'value' && (
+                        <span>{toTime(datetime[rangeValue[1]])}</span>
+                    )}
+                </div>
             </div>
-            <div>
-                <button onClick={handlePlayPause}>{isPlaying ? 'Pause' : 'Play'}</button>
-            </div>
-            <div>
-                <strong>Selected {selectedOption}: </strong>{output}
+            <div className="slider-output">
+                <strong>Selected {selectedOption}: </strong>
+                <pre>{JSON.stringify(output, null, 2)}</pre>
             </div>
         </div>
     );

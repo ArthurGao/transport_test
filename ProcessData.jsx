@@ -1,5 +1,4 @@
 const processData = (data) => {
-    // Group data by datetime and keep all speed values in a set
     const groupedData = data.reduce((acc, curr) => {
         curr.datetime.forEach((dt, index) => {
             if (!acc[dt]) {
@@ -15,7 +14,6 @@ const processData = (data) => {
         return acc;
     }, {});
 
-    // Convert the Set back to an array for easy processing in DataRangeSlider
     const preparedData = Object.values(groupedData).map(group => ({
         datetime: group.datetime,
         speeds: Array.from(group.speeds),
