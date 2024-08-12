@@ -108,30 +108,38 @@ const DataRangeSlider = ({ data }) => {
                 </button>
             </div>
             <div className="slider-container">
-                <div className="slider-labels">
-                    <span
-                        className="slider-date-range">Date Range: {formatDate(minDatetime)} - {formatDate(maxDatetime)}</span>
-                </div>
-                <ReactSlider
-                    className="horizontal-slider"
-                    thumbClassName="thumb"
-                    trackClassName="track"
-                    value={selectedOption === 'value' ? rangeValue[0] : rangeValue}
-                    min={0}
-                    max={data.datetime.length - 1}
-                    onChange={value => setRangeValue(selectedOption === 'value' ? [value] : value)}
-                    renderThumb={(props) => <div {...props}></div>}
-                    pearling
-                    minDistance={selectedOption === 'value' ? 0 : 1}
-                    step={1}
-                    ariaLabel={['Lower thumb', 'Upper thumb']}
-                    ariaValuetext={state => `Thumb value ${state.valueNow}`}
-                />
-                <div className="slider-selector-values">
-                    <span>{toTime(datetime[rangeValue[0]])}</span>
-                    {selectedOption !== 'value' && (
-                        <span>{toTime(datetime[rangeValue[1]])}</span>
-                    )}
+                <div className="slider-wrapper">
+                    <ReactSlider
+                        className="horizontal-slider"
+                        thumbClassName="thumb"
+                        trackClassName="track"
+                        value={selectedOption === 'value' ? rangeValue[0] : rangeValue}
+                        min={0}
+                        max={data.datetime.length - 1}
+                        onChange={value => setRangeValue(selectedOption === 'value' ? [value] : value)}
+                        renderThumb={(props) => <div {...props}></div>}
+                        pearling
+                        minDistance={selectedOption === 'value' ? 0 : 1}
+                        step={1}
+                        ariaLabel={['Lower thumb', 'Upper thumb']}
+                        ariaValuetext={state => `Thumb value ${state.valueNow}`}
+                    />
+                    <div className="slider-selector-values">
+            <span
+                className="left-value"
+                style={{left: `${(rangeValue[0] / (data.datetime.length - 1)) * 100}%`}}
+            >
+                {toTime(datetime[rangeValue[0]])}
+            </span>
+                        {selectedOption !== 'value' && (
+                            <span
+                                className="right-value"
+                                style={{left: `${(rangeValue[1] / (data.datetime.length - 1)) * 100}%`}}
+                            >
+                    {toTime(datetime[rangeValue[1]])}
+                </span>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className="slider-output">
