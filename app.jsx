@@ -1,233 +1,108 @@
-import React from 'react';
+import React, {useRef, useState} from 'react';
 import DataRangeSlider from './DataRangeSlider';
 import {createRoot} from 'react-dom/client';
+import {Map} from 'react-map-gl';
+import maplibregl from 'maplibre-gl';
+import DeckGL from '@deck.gl/react';
+import {scaleThreshold} from "d3-scale";
+import {PathStyleExtension} from '@deck.gl/extensions';
+import {PathLayer} from '@deck.gl/layers';
+import getDataById from "./GetDataById";
 
-const testData = {
-    "coordinates": [
-        [
-            175.44931003823876,
-            -41.09032002277671
-        ],
-        [
-            175.44955001212656,
-            -41.090160012245185
-        ],
-        [
-            175.44955001212656,
-            -41.090160012245185
-        ],
-        [
-            175.4498400259763,
-            -41.08990998007358
-        ],
-        [
-            175.4498400259763,
-            -41.08990998007358
-        ],
-        [
-            175.45020002871752,
-            -41.089600017294295
-        ],
-        [
-            175.45020002871752,
-            -41.089600017294295
-        ],
-        [
-            175.45060998760164,
-            -41.08923004008829
-        ],
-        [
-            175.45060998760164,
-            -41.08923004008829
-        ],
-        [
-            175.45097996480763,
-            -41.08888998627662
-        ],
-        [
-            175.45097996480763,
-            -41.08888998627662
-        ],
-        [
-            175.45143996365368,
-            -41.088469969108694
-        ],
-        [
-            175.45143996365368,
-            -41.088469969108694
-        ],
-        [
-            175.45279003679752,
-            -41.08724000863731
-        ],
-        [
-            175.45279003679752,
-            -41.08724000863731
-        ],
-        [
-            175.4529399890453,
-            -41.087100030854344
-        ],
-        [
-            175.45313000679016,
-            -41.08691998757422
-        ],
-        [
-            175.45313000679016,
-            -41.08691998757422
-        ],
-        [
-            175.4532900173217,
-            -41.08678000979125
-        ],
-        [
-            175.4532900173217,
-            -41.08678000979125
-        ],
-        [
-            175.4541599750519,
-            -41.085999989882104
-        ],
-        [
-            175.4541599750519,
-            -41.085999989882104
-        ],
-        [
-            175.4555099643767,
-            -41.08478997834027
-        ],
-        [
-            175.4555099643767,
-            -41.08478997834027
-        ],
-        [
-            175.45648000203073,
-            -41.08390996232628
-        ],
-        [
-            175.45726999640465,
-            -41.083190040662885
-        ],
-        [
-            175.45726999640465,
-            -41.083190040662885
-        ],
-        [
-            175.4577900096774,
-            -41.08273004181683
-        ],
-        [
-            175.4577900096774,
-            -41.08273004181683
-        ],
-        [
-            175.459060035646,
-            -41.08159001916646
-        ],
-        [
-            175.459060035646,
-            -41.08159001916646
-        ],
-        [
-            175.45967996120456,
-            -41.081030024215586
-        ],
-        [
-            175.45967996120456,
-            -41.081030024215586
-        ],
-        [
-            175.46001004055142,
-            -41.08073003590107
-        ],
-        [
-            175.46001004055142,
-            -41.08073003590107
-        ],
-        [
-            175.46022998169065,
-            -41.08054001815617
-        ],
-        [
-            175.46022998169065,
-            -41.08054001815617
-        ],
-        [
-            175.46095996163785,
-            -41.07989000156521
-        ],
-        [
-            175.46095996163785,
-            -41.07989000156521
-        ],
-        [
-            175.46146002598107,
-            -41.079439977183924
-        ],
-        [
-            175.46146002598107,
-            -41.079439977183924
-        ],
-        [
-            175.461739981547,
-            -41.07919002883136
-        ],
-        [
-            175.461739981547,
-            -41.07919002883136
-        ],
-        [
-            175.46254003420472,
-            -41.07847002334893
-        ]
-    ],
-    "datetime": [
-        "2023-03-07T07:00:00",
-        "2023-03-07T07:15:00",
-        "2023-03-07T07:30:00",
-        "2023-03-07T07:45:00",
-        "2023-03-07T08:00:00",
-        "2023-03-07T08:15:00",
-        "2023-03-07T08:30:00",
-        "2023-03-07T08:45:00",
-        "2023-03-07T09:00:00"
-    ],
-    "speed": [
-        46.0000008,
-        43.000002,
-        43.000002,
-        42.0000012,
-        41.000000400000005,
-        40.0000032,
-        39.0000024,
-        34.999999200000005,
-        42.0000012
-    ],
-    "los_band": [
-        1.0,
-        2.0,
-        2.0,
-        2.0,
-        2.0,
-        2.0,
-        2.0,
-        2.0,
-        2.0
-    ],
-    "id": 2
+//const testData = getDataById(2);
+
+// Source data
+const DATA =
+    'inputs/test_input_example.json';
+
+// set a linear scale for the colour for los band 1 to 6
+const colorScale = scaleThreshold()
+    .domain([1, 2, 3, 4, 5, 6])
+    .range([
+        [60, 207, 23],
+        [125, 171, 0],
+        [150, 135, 0],
+        [158, 98, 0],
+        [152, 63, 4],
+        [134, 29, 29]
+    ]);
+
+// Set the initial view state
+const INITIAL_VIEW_STATE = {
+    latitude: -41.291668,
+    longitude: 174.787618,
+    zoom: 13,
+    maxZoom: 20,
+    pitch: 0,
+    bearing: 0
 };
 
-const App = () => {
+// Set the map style
+const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-nolabels-gl-style/style.json';
+
+// Function to get the tooltip
+function getTooltip({object}) {
     return (
-        <div>
-            <h1>Data Range Slider Example</h1>
-            <DataRangeSlider data={testData} />
-        </div>
+        object && {
+            html: `\
+  <div>ID: ${object.id}</div>
+  <div>Datetime: ${object.datetime}</div>
+  <div>Speed: ${object.speed}</div>
+  <div>Level of Service: ${object.los_band}</div>
+  `
+        }
     );
-};
-
-export function renderToDOM(container) {
-    createRoot(container).render(<App />);
 }
 
-export default App;
+export default function App({data = DATA, mapStyle = MAP_STYLE}) {
+    const [testData, setTestData] = useState(null);
+    const sliderRef = useRef(null);
+
+
+    const handleMapClick = (info) => {
+        if (info.object) {
+            const id = info.object.id;
+            const newData = getDataById(id);
+            if (sliderRef.current) {
+                sliderRef.current.refresh(newData);
+            }
+        }
+    };
+    const layers = [
+        new PathLayer({
+            id: 'test-example',
+            data: data,
+            getColor: d => colorScale(d.los_band),
+            getPath: d => d.coordinates,
+            getWidth: 10,
+            jointRounded: true,
+            widthMinPixels: 2,
+            autoHighlight: true,
+            opacity: 1,
+            pickable: true,
+            getOffset: -0.5,
+            extensions: [new PathStyleExtension({offset: true, dashJustified: true})]
+        })
+    ];
+
+    return (
+        <div>
+            <DeckGL
+                layers={layers}
+                initialViewState={INITIAL_VIEW_STATE}
+                controller={true}
+                getTooltip={getTooltip}
+                onClick={handleMapClick}
+            >
+                <Map reuseMaps mapLib={maplibregl} mapStyle={mapStyle} preventStyleDiffing={true}/>
+            </DeckGL>
+                <div className="slider-panel">
+                    <DataRangeSlider ref={sliderRef} initialData={getDataById(2)}/>
+                </div>
+        </div>
+    );
+}
+
+export function renderToDOM(container) {
+    createRoot(container).render(<App/>);
+}

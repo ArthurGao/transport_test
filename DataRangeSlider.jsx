@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useImperativeHandle, forwardRef} from 'react';
 import ReactSlider from 'react-slider';
 import * as d3 from 'd3';
 import './DataRangeSlider.css';
 
-const DataRangeSlider = ({ data }) => {
+const DataRangeSlider = forwardRef(({ initialData }, ref) => {
+    const [data, setData] = useState(initialData);
+
     const [rangeValue, setRangeValue] = useState([0, 8]);
     const [selectedOption, setSelectedOption] = useState('value');
     const [output, setOutput] = useState(null);
@@ -12,6 +14,14 @@ const DataRangeSlider = ({ data }) => {
     const datetime = data.datetime.map(d => new Date(d).getTime());
     const minDatetime = d3.min(datetime);
     const maxDatetime = d3.max(datetime);
+
+    useImperativeHandle(ref, () => ({
+        refresh(newData) {
+            setData(newData);
+            setRangeValue([0, Math.min(newData.datetime.length - 1, 8)]);
+            setSelectedOption('value');
+        }
+    }));
 
     const calculateOutput = () => {
         const startIndex = rangeValue[0];
@@ -91,7 +101,6 @@ const DataRangeSlider = ({ data }) => {
 
     return (
         <div className="slider-wrapper">
-            <h3 className="slider-title">Data Range Slider</h3>
             <div className="slider-controls">
                 <select
                     className="slider-select"
@@ -148,6 +157,6 @@ const DataRangeSlider = ({ data }) => {
             </div>
         </div>
     );
-};
+});
 
 export default DataRangeSlider;
